@@ -1,0 +1,4 @@
+gather:
+   tdxdata:
+      lday: S:/opt/tdx/vipdoc/sh/lday
+      csv: S:\Workspace\tdx\data\csv
