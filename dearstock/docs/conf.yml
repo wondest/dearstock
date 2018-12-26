@@ -1,4 +1,12 @@
 gather:
-   tdxdata:
-      lday: S:/opt/tdx/vipdoc/sh/lday
-      csv: S:\Workspace\tdx\data\csv
+  tdx:
+    sh:
+      lday: S:\opt\tdx\vipdoc\sh\lday
+    sz:
+      lday: S:\opt\tdx\vipdoc\sz\lday
+    data:
+      csv: S:\Workspace\dearstock\tdx\data
+  sina:
+    data:
+      csv: S:\Workspace\dearstock\sina\data
+   

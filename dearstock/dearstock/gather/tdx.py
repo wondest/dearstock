@@ -11,8 +11,9 @@ Created on Dec 22, 2018
 import os
 import struct
 import pandas as pd
+import csv
 
-from dearstock.gather import consts as cnts
+from dearstock.gather import consts as cnst
 from dearstock.util import config
 
 import logging
@@ -20,23 +21,22 @@ import logging
 # logging.basicConfig函数对日志的输出格式及方式做相关配置
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
 
-def get_tdx_lday_data(code, start=None, end=None):
+def get_tdx_his_day(code, start=None, end=None):
     """
-    获取个股或者指数历史交易记录
+        获取个股或者指数历史交易记录（天）
         
-    parameters:
+    Parameters:
     -----------
-      code:string
-        股票代码 或者 别名
-      start:string
-        起始日期
-      end:string
-        终止日期
-        
-    return
+      code : String
+              股票代码 或者 别名
+      start : string
+              起始日期
+      end : string
+              终止日期
+
+    Return
     -------
       DataFrame
-          label: 指数代码
           date: YYYY-MM-DD  -- index
           name: 指数名称
           change: 涨跌幅
@@ -48,29 +48,38 @@ def get_tdx_lday_data(code, start=None, end=None):
           volume: 成交量(手)
           amount: 成交金额（亿元）
           code: 股票代码
+          symbol: 股票编码
     """
     
-    label = _find_tdx_label(code)
-    if label is None:
-        raise KeyError("code = [%s]" % code)
+    symbol = _find_tdx_label(code)
+    if symbol is None:
+        raise KeyError("symbol = [%s] 非法股票代码" % code)
 
-    csv_path = config.get_tdxdata_csv()
-    csv_file = os.path.join(csv_path, label + '.csv')
+    today = config.get_today_str()
+    csv_path = config.get_tdx_data_csv()
+    csv_file = os.path.join(csv_path, symbol + '_' + today + '.csv')
     df = None
     
     if os.path.exists(csv_file):
         logging.debug("Get data from csv")
         date_parser = lambda dates: pd.datetime.strptime(dates, '%Y-%m-%d')
-        df = pd.read_csv(csv_file, parse_dates=['date'], index_col='date', date_parser=date_parser)
+        df = pd.read_csv(csv_file, parse_dates=['date'], index_col='date', date_parser=date_parser, converters = {u'code':str})
     else:
         logging.debug("Get data from lday")
-        df = _parse_tdx_lday(label, config.get_tdxdata_lday())
-        df['code'] = code
+        
+        day_file = os.path.join(config.get_tdx_sh_lday(), symbol + '.day')
+        
+        if(not os.path.exists(day_file)):
+            day_file = os.path.join(config.get_tdx_sz_lday(), symbol + '.day')
+        
+        df = _parse_tdx_lday(day_file)
+        df['code'] = str(symbol[2:])
+        df['symbol'] = symbol
 
         if not os.path.exists(csv_path):
             os.mkdir(csv_path)
         
-        df.to_csv(csv_file)
+        df.to_csv(csv_file, quoting=csv.QUOTE_ALL)
 
     if start is not None:
         df = df[df.date >= start]
@@ -81,27 +90,46 @@ def get_tdx_lday_data(code, start=None, end=None):
     return df
     
 def _find_tdx_label(code):
-    return cnts.STOCK_CHAIN.setdefault(code, None)
-
-def _parse_tdx_lday(label, file_path, field_bytes=32):
     """
-    解析通达信文件
+        根据股票代码或者别名搜索到对应的通达信文件名
     
-    每32个字节为一天数据
-    每4个字节为一个字段，每个字段内低字节在前
-    00 ~ 03 字节：年月日, 整型
-    04 ~ 07 字节：开盘价*100， 整型
-    08 ~ 11 字节：最高价*100, 整型
-    12 ~ 15 字节：最低价*100, 整型
-    16 ~ 19 字节：收盘价*100, 整型
-    20 ~ 23 字节：成交额（元），float型
-    24 ~ 27 字节：成交量（股），整型
-    28 ~ 31 字节：（保留）
+    Parameters
+    ------------
+        code : String
+                   股票代码或者别名
     
-    return
+    Return
+    -------
+        symbol : String
+                    股票编码，如果没找到则返回None
+    """
+    return cnst.STOCK_CHAIN.setdefault(code, None)
+
+def _parse_tdx_lday(day_file, field_bytes=32):
+    """
+        解析通达信文件
+        
+        每32个字节为一天数据
+        每4个字节为一个字段，每个字段内低字节在前
+        00 ~ 03 字节：年月日, 整型
+        04 ~ 07 字节：开盘价*100， 整型
+        08 ~ 11 字节：最高价*100, 整型
+        12 ~ 15 字节：最低价*100, 整型
+        16 ~ 19 字节：收盘价*100, 整型
+        20 ~ 23 字节：成交额（元），float型
+        24 ~ 27 字节：成交量（股），整型
+        28 ~ 31 字节：（保留）
+    
+    Parameters
+    -----------
+      day_file : String
+               通达信文件名
+      filed_bytes : Integer
+              一行数据占用字节
+
+    Return
     -------
       DataFrame
-          label:指数代码
           date:YYYY-MM-DD  -- index
           name:指数名称
           change:涨跌幅
@@ -115,12 +143,9 @@ def _parse_tdx_lday(label, file_path, field_bytes=32):
     """
     
     data_list = []
-    data_columns = ['label', 'date', 'change', 'open', 'preclose', 'high', 'low', 'volume', 'amount']
+    data_columns = ['date', 'change', 'open', 'preclose', 'high', 'low', 'volume', 'amount']
     
-    # xxxx/sh000001.day
-    lday_file = os.path.join(file_path, label + ".day")
-    
-    with open(lday_file, 'rb') as f:
+    with open(day_file, 'rb') as f:
         buffer = f.read()
         num_line = int(len(buffer)/field_bytes)
         
@@ -130,7 +155,7 @@ def _parse_tdx_lday(label, file_path, field_bytes=32):
             
             field_data = struct.unpack('IIIIIfII', buffer[byte_index_b:(byte_index_b+field_bytes)])
             
-            date = _conv_yyyymmdd(field_data[0])
+            date = _str_yyyymmdd(field_data[0])
             open_1 = field_data[1]/100.0
             high = field_data[2]/100.0
             low =  field_data[3]/100.0
@@ -144,24 +169,25 @@ def _parse_tdx_lday(label, file_path, field_bytes=32):
 
             preclose = close
 
-            data_list.append([label, date, change, open_1, preclose, high, low, volume, amount])
+            data_list.append([date, change, open_1, preclose, high, low, volume, amount])
     
     df = pd.DataFrame(data_list, columns=data_columns)
     df['date'] = pd.to_datetime(df['date'])
     df.set_index("date", inplace=True)
     return df
 
-def _conv_yyyymmdd(i_yyyymmdd):
+def _str_yyyymmdd(i_yyyymmdd):
     """
-    将整数的年月日转换成字符串
+        将整数的年月日转换成字符串
     
-    parameters
+    Parameters
     -------
-      Integer i_yyyymmdd
-    
-    return
+      i_yyyymmdd : Integer
+
+    Return
     -------
-      String s_yyyymmdd
+      s_yyyymmdd : String
+          yyyy-mm-dd
     """
     year = int(i_yyyymmdd/10000);
     m = int((i_yyyymmdd%10000)/100);
@@ -178,4 +204,4 @@ def _conv_yyyymmdd(i_yyyymmdd):
 
 if __name__ == '__main__':
     print("Trading test")
-    print(get_tdx_lday_data('sh'))
+    print(get_tdx_his_day('sh'))

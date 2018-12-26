@@ -20,4 +20,4 @@ __config__ = os.path.join(os.path.dirname(__file__), '../docs' ,'conf.yml')
 """
 for trading data
 """
-from dearstock.gather.trading import (get_tdx_lday_data)
+from dearstock.gather.tdx import (get_tdx_his_day)
