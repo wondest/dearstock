@@ -11,13 +11,18 @@ Created on Dec 23, 2018
 
 import codecs
 import os
+import sys
 
 __version__ = codecs.open(os.path.join(os.path.dirname(__file__), 'VERSION.txt')).read()
-__author__ = 'Tender Xie'
-__config__ = os.path.join(os.path.dirname(__file__), '../docs' ,'conf.yml')
+__author__ = 'Tender'
 
+if sys.platform == 'win32':
+    __config__ = os.path.join(os.path.dirname(__file__), '../docs' ,'conf-win32.yml')
+else:
+    __config__ = os.path.join(os.path.dirname(__file__), '../docs' ,'conf.yml')
 
 """
-for trading data
+gather api
 """
-from dearstock.gather.tdx import (get_tdx_his_day)
+from dearstock.gather.api import *
+from dearstock.store.dao import *

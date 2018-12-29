@@ -21,7 +21,7 @@ import logging
 # logging.basicConfig函数对日志的输出格式及方式做相关配置
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
 
-def get_tdx_his_day(code, start=None, end=None):
+def get_his_day(code, start=None, end=None):
     """
         获取个股或者指数历史交易记录（天）
         
@@ -36,9 +36,10 @@ def get_tdx_his_day(code, start=None, end=None):
 
     Return
     -------
+      symbol : String
+              股票编码
       DataFrame
           date: YYYY-MM-DD  -- index
-          name: 指数名称
           change: 涨跌幅
           open: 开盘价
           preclose: 昨日收盘价
@@ -51,28 +52,40 @@ def get_tdx_his_day(code, start=None, end=None):
           symbol: 股票编码
     """
     
-    symbol = _find_tdx_label(code)
+    symbol = _find_stock_symbol(code)
     if symbol is None:
         raise KeyError("symbol = [%s] 非法股票代码" % code)
 
-    today = config.get_today_str()
-    csv_path = config.get_tdx_data_csv()
-    csv_file = os.path.join(csv_path, symbol + '_' + today + '.csv')
+    csv_path = config.get_local_hist()
+    csv_file = os.path.join(csv_path, symbol + '.csv')
     df = None
     
     if os.path.exists(csv_file):
-        logging.debug("Get data from csv")
+        logging.debug("Get data from local-repo")
         date_parser = lambda dates: pd.datetime.strptime(dates, '%Y-%m-%d')
         df = pd.read_csv(csv_file, parse_dates=['date'], index_col='date', date_parser=date_parser, converters = {u'code':str})
     else:
-        logging.debug("Get data from lday")
+        logging.debug("Get data from tdx")
         
-        day_file = os.path.join(config.get_tdx_sh_lday(), symbol + '.day')
+        data_paths = config.get_remote_tdx_lday()
+        data_path = None
+
+        if isinstance(data_paths, list):
+            # 搜索所有路径下是否有文件
+            for the_path in data_paths:
+                data_file = os.path.join(the_path, symbol + '.day')
+                if(os.access(data_file, os.R_OK)):
+                    data_path = the_path
+                    break
+        else:
+            data_file = os.path.join(data_paths, symbol + '.day')
+            if(os.access(data_file, os.R_OK)):
+                data_path = data_paths
         
-        if(not os.path.exists(day_file)):
-            day_file = os.path.join(config.get_tdx_sz_lday(), symbol + '.day')
-        
-        df = _parse_tdx_lday(day_file)
+        if data_path is None:
+            raise FileNotFoundError('No such file: ' + data_file)
+
+        df = _parse_tdx_lday(data_file)
         df['code'] = str(symbol[2:])
         df['symbol'] = symbol
 
@@ -87,9 +100,9 @@ def get_tdx_his_day(code, start=None, end=None):
     if end is not None:
         df = df[df.date <= end]
 
-    return df
+    return (symbol, df)
     
-def _find_tdx_label(code):
+def _find_stock_symbol(code):
     """
         根据股票代码或者别名搜索到对应的通达信文件名
     
@@ -143,7 +156,7 @@ def _parse_tdx_lday(day_file, field_bytes=32):
     """
     
     data_list = []
-    data_columns = ['date', 'change', 'open', 'preclose', 'high', 'low', 'volume', 'amount']
+    data_columns = ['date', 'change', 'open', 'preclose', 'close', 'high', 'low', 'volume', 'amount']
     
     with open(day_file, 'rb') as f:
         buffer = f.read()
@@ -162,15 +175,11 @@ def _parse_tdx_lday(day_file, field_bytes=32):
             close = field_data[4]/100.0
             amount = field_data[5]/10.0
             volume = field_data[6]
-            
             if i==0:
                 preclose = close
             change = round((close - preclose)/preclose*100, 2)
-
+            data_list.append([date, change, open_1, preclose, close, high, low, volume, amount])
             preclose = close
-
-            data_list.append([date, change, open_1, preclose, high, low, volume, amount])
-    
     df = pd.DataFrame(data_list, columns=data_columns)
     df['date'] = pd.to_datetime(df['date'])
     df.set_index("date", inplace=True)
@@ -201,7 +210,3 @@ def _str_yyyymmdd(i_yyyymmdd):
         day = "0" + str(d);
     
     return str(year) + "-" + month + "-" + day
-
-if __name__ == '__main__':
-    print("Trading test")
-    print(get_tdx_his_day('sh'))

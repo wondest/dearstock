@@ -19,7 +19,7 @@ STOCK_INDEX = {'sh': 'sh000001', 'sz': 'sz399001', 'hs300': 'sh000300',
               'sz50': 'sh000016', 'zxb': 'sz399005', 'cyb': 'sz399006', 
               'zx300': 'sz399008', 'zh500':'sh000905'}
 
-STOCK_INDVL = {'000001': 'sz000001', '600005': 'sh600005'}
+STOCK_INDVL = {'000001': 'sz000001', '60000Z': 'sh60000Z'}
 
 STOCK_CHAIN = ChainMap(STOCK_INDEX, STOCK_INDVL)
 
