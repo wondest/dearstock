@@ -96,10 +96,10 @@ def get_his_day(code, start=None, end=None):
         df.to_csv(csv_file, quoting=csv.QUOTE_ALL)
 
     if start is not None:
-        df = df[df.date >= start]
+        df = df[start:]
     
     if end is not None:
-        df = df[df.date <= end]
+        df = df[:end]
 
     return (symbol, df)
     

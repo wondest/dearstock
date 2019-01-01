@@ -14,13 +14,16 @@
 * gather : 从tdx采集lday数据功能
 * gather : 从新浪爬取当天所有股票数据 
 * store  : 将数据装入mysql中
+* index : ma,kdj,macd数据加工
 
 ## 3. TODO LIST
 * gather : 实现股票数据的收集功能
 * gather : 完善股票代码信息
-* kdj数据加工
 * kdj选股因子
-*  蜡烛图
+* macd选股因子
+* ma选股因子
+* 蜡烛图
+* kdj_cross 验证
 
 ## 4. DONE LIST
 ### 2018/12/23
@@ -39,3 +42,9 @@
 
 ### 2018/12/29
 * 数据装入mysql中
+
+### 2019/01/01
+* ma数据加工
+* kdj数据加工
+* macd数据加工
+* kdj_cross

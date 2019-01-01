@@ -9,6 +9,4 @@ Created on 2018年12月29日
 @public: weixin public "笛尔宝"
 '''
 
-from dearstock.index.ma import (ma, ema, sma, dma)
-from dearstock.index.kdj import (rsv, kdj)
-from dearstock.index.macd import (macd)
+from dearstock.factor.kdj_cross import (kdj_cross)
