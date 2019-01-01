@@ -10,4 +10,4 @@ Created on 2018年12月29日
 '''
 
 from dearstock.gather.sina import (get_cur_day_all)
-from dearstock.gather.tdx import (get_his_day)
+from dearstock.gather.tdx import (get_his_day, find_stock_symbol)

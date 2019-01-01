@@ -9,7 +9,7 @@ Created on 2018年12月28日
 '''
 
 from sqlalchemy import create_engine
-import pymysql as mysql
+import mysql.connector as mysql
 
 class dbEngine():
     def __init__(self, dbname=None, user=None, password=None, host='localhost', port='3306', dbtype='mysql+pymysql'):
@@ -37,8 +37,7 @@ class dbConn():
                                   port=self.port,
                                   user=self.user,
                                   passwd=self.password,
-                                  db=self.dbname,
-                                  charset='utf8')
+                                  database=self.dbname)
         return self.conn
     
     def __exit__(self, exc_type, exc_instalce, traceback):

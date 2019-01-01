@@ -64,4 +64,4 @@ def get_today_str():
     return time.strftime('%Y%m%d',time.localtime(time.time()))
 
 if __name__ == '__main__':
-    print(get_today_str())
+    print(get_store_mysql_dbinfo())

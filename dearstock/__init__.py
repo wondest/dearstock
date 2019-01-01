@@ -26,3 +26,4 @@ gather api
 """
 from dearstock.gather.api import *
 from dearstock.store.dao import *
+from dearstock.index.api import *

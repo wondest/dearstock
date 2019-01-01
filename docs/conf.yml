@@ -1,12 +1,17 @@
-gather:
+#remote-repository
+remote:
   tdx:
-    sh:
-      lday: S:\opt\tdx\vipdoc\sh\lday
-    sz:
-      lday: S:\opt\tdx\vipdoc\sz\lday
-    data:
-      csv: S:\Workspace\dearstock\tdx\data
-  sina:
-    data:
-      csv: S:\Workspace\dearstock\sina\data
-   
+    lday:
+      - /home/tender/Workspace/dearstock/tdx/data
+#local-repository
+local:
+  hist: /home/tender/Workspace/dearstock/hist
+  snap: /home/tender/Workspace/dearstock/snap
+#
+store:
+  mysql:
+    user: dearApp
+    password: dear#2018#APP
+    host: localhost
+    port: 3306
+    dbname: dearstock

@@ -52,7 +52,7 @@ def get_his_day(code, start=None, end=None):
           symbol: 股票编码
     """
     
-    symbol = _find_stock_symbol(code)
+    symbol = find_stock_symbol(code)
     if symbol is None:
         raise KeyError("symbol = [%s] 非法股票代码" % code)
 
@@ -69,6 +69,7 @@ def get_his_day(code, start=None, end=None):
         
         data_paths = config.get_remote_tdx_lday()
         data_path = None
+        data_file = None
 
         if isinstance(data_paths, list):
             # 搜索所有路径下是否有文件
@@ -83,7 +84,7 @@ def get_his_day(code, start=None, end=None):
                 data_path = data_paths
         
         if data_path is None:
-            raise FileNotFoundError('No such file: ' + data_file)
+            raise FileNotFoundError('Tdx lday file')
 
         df = _parse_tdx_lday(data_file)
         df['code'] = str(symbol[2:])
@@ -102,7 +103,7 @@ def get_his_day(code, start=None, end=None):
 
     return (symbol, df)
     
-def _find_stock_symbol(code):
+def find_stock_symbol(code):
     """
         根据股票代码或者别名搜索到对应的通达信文件名
     
