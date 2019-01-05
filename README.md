@@ -15,6 +15,7 @@
 * gather : 从新浪爬取当天所有股票数据 
 * store  : 将数据装入mysql中
 * index : ma,kdj,macd数据加工
+* gether : 完成所有文件fetch功能
 
 ## 3. TODO LIST
 * gather : 实现股票数据的收集功能
@@ -24,6 +25,8 @@
 * ma选股因子
 * 蜡烛图
 * kdj_cross 验证
+* kdj_oversold
+* kdj_passivation
 
 ## 4. DONE LIST
 ### 2018/12/23
@@ -48,3 +51,7 @@
 * kdj数据加工
 * macd数据加工
 * kdj_cross
+
+### 2019/01/03
+* gether完成所有文件fetch功能
+* mysql启动失败解决

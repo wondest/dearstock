@@ -21,9 +21,47 @@ import logging
 # logging.basicConfig函数对日志的输出格式及方式做相关配置
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s')
 
+def fetch_his_day_all():
+    """
+               同步所有通达信数据 
+    """
+    logging.debug("Get data from tdx")
+
+    csv_path = config.get_local_hist()
+    if not os.path.exists(csv_path):
+        os.mkdir(csv_path)
+        
+    data_paths = config.get_remote_tdx_lday()
+    
+    if isinstance(data_paths, list):
+        for data_path in data_paths:
+            for main_path, sub_path, file_list in os.walk(data_path):
+                _parse_all_lday_by_path(main_path, csv_path)
+    else:
+        _parse_all_lday_by_path(data_path, csv_path)
+
+def _parse_all_lday_by_path(in_path, out_path):
+    """
+               同步所有通达信数据
+    Parameter:
+      in_path : String : 输入文件所在目录
+      out_path : String : 输出目录 
+    """
+    for main_path, sub_path, file_list in os.walk(in_path):
+        for file in file_list:
+            base_name = os.path.splitext(file)[0]
+            file_type = os.path.splitext(file)[1]
+            if file_type == '.day':
+                df = _parse_tdx_lday(os.path.join(main_path, file))
+                symbol = base_name
+                df['code'] = str(symbol[2:])
+                df['symbol'] = symbol
+                df.to_csv(os.path.join(out_path, base_name + '.csv'), quoting=csv.QUOTE_ALL)
+                logging.debug("symbol:%s -- done" % symbol)
+
 def get_his_day(code, start=None, end=None):
     """
-        获取个股或者指数历史交易记录（天）
+                获取个股或者指数历史交易记录（天）
         
     Parameters:
     -----------

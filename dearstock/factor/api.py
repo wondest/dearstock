@@ -9,4 +9,4 @@ Created on 2018年12月29日
 @public: weixin public "笛尔宝"
 '''
 
-from dearstock.factor.kdj_cross import (kdj_cross)
+from dearstock.factor.tech import (kdj_cross)

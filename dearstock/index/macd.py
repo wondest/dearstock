@@ -38,7 +38,7 @@ def macd(df, n=9, m1=12, m2=26):
     df['macd_dea'] = df['macd_dif'].ewm(adjust=False, span=n).mean()
     
     # Calc macd_bar
-    df['macd_bar'] = df['macd_dif'] - df['macd_dea']
+    df['macd_bar'] = 2*(df['macd_dif'] - df['macd_dea'])
     
     return df
 
@@ -63,11 +63,11 @@ def _dif(df, m1, m2):
         raise ValueError('Argument df is None')
     
     if m1 > m2:
-        slow = m2
-        fast = m1
-    else:
         slow = m1
         fast = m2
+    else:
+        slow = m2
+        fast = m1
 
     # Calc fast
     df['macd_fast'] = df['close'].ewm(adjust=False, span=fast).mean()
@@ -76,6 +76,6 @@ def _dif(df, m1, m2):
     df['macd_slow'] = df['close'].ewm(adjust=False, span=slow).mean()
 
     # Calc dif
-    df['macd_dif'] = df['macd_fast'] - df['macd_slow']
+    df['macd_dif'] = (df['macd_fast'] - df['macd_slow'])
 
     return df.drop(columns=['macd_fast', 'macd_slow'])
