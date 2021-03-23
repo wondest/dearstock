@@ -1,4 +1,4 @@
-# DearStock: Use python to analysize stock
+# PyStock: Use python to analysize stock
 
 ## 1. Something
 ### version
